@@ -3,12 +3,17 @@ package com.lowcode.workflow.runner.graph.data.struct.instance;
 import com.baomidou.mybatisplus.annotation.EnumValue;
 import com.baomidou.mybatisplus.annotation.FieldFill;
 import com.baomidou.mybatisplus.annotation.TableField;
+import com.baomidou.mybatisplus.annotation.TableName;
+import com.lowcode.workflow.runner.graph.data.struct.template.Node;
+import com.lowcode.workflow.runner.graph.data.struct.template.NodeType;
 import com.lowcode.workflow.runner.graph.handler.JsonTypeHandler;
 import lombok.Data;
 import lombok.Getter;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * 节点执行记录实体类
@@ -16,7 +21,25 @@ import java.util.Map;
  * 每次流程实例运行中，每个节点生成一条执行记录，用于追踪、重试、审计
  */
 @Data
+@TableName("node_executions")
 public class NodeInstance {
+
+
+    public NodeInstance(Node currentNode, FlowInstance flowInstance) {
+        this.id = UUID.randomUUID().toString();
+        this.instanceId = flowInstance.getId();
+        this.nodeId = currentNode.getId();
+        this.nodeType = currentNode.getType();
+        this.status = NodeInstanceStatus.pending;
+        this.nodeDataFieldKey = currentNode.getNodeDataFieldKey();
+        this.inputData = currentNode.getData();
+        this.maxRetries = 1;
+        this.retryCount = 0;
+        this.startedAt = LocalDateTime.now();
+        this.type = currentNode.getNodeType();
+    }
+
+
 
     /**
      * 节点执行记录唯一ID（建议 UUID）
@@ -91,6 +114,12 @@ public class NodeInstance {
      */
     @TableField(fill = FieldFill.INSERT_UPDATE)
     private LocalDateTime updatedAt;
+
+    @TableField(exist = false)
+    private String nodeDataFieldKey;
+
+    @TableField(exist = false)
+    private NodeType type;
 
     @Getter
     public enum NodeInstanceStatus {

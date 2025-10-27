@@ -1,6 +1,7 @@
 package com.lowcode.workflow.runner.graph.excutors;
 
 import com.lowcode.workflow.runner.graph.annotation.NodeExecutorType;
+import com.lowcode.workflow.runner.graph.exception.custom.CustomException;
 import com.lowcode.workflow.runner.graph.exception.sys.SystemException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,6 +37,11 @@ public class NodeExecutorRegistry {
 
             if (executor instanceof NodeExecutor) {
                 NodeExecutorType nodeExecutorType = executor.getClass().getAnnotation(NodeExecutorType.class);
+                String type = nodeExecutorType.value();
+                if (type == null || type.trim().isEmpty()) {
+                    log.error("节点类型为空");
+                    throw new CustomException(600, "节点类型为空");
+                }
                 executors.put(nodeExecutorType.value(), (NodeExecutor) executor);
             }
         });
@@ -50,7 +56,8 @@ public class NodeExecutorRegistry {
      */
     public NodeExecutor get(String typeKey) {
         if (!executors.containsKey(typeKey)) {
-            throw new SystemException(600, "节点执行器类型不存在");
+            log.error("节点执行器类型不存在");
+            throw new SystemException(600, "节点执行器不存在");
         }
         return executors.get(typeKey);
     }

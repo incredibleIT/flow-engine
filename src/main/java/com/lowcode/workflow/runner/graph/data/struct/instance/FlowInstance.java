@@ -2,6 +2,8 @@ package com.lowcode.workflow.runner.graph.data.struct.instance;
 import com.baomidou.mybatisplus.annotation.EnumValue;
 import com.baomidou.mybatisplus.annotation.FieldFill;
 import com.baomidou.mybatisplus.annotation.TableField;
+import com.baomidou.mybatisplus.annotation.TableName;
+import com.lowcode.workflow.runner.graph.data.struct.template.Edge;
 import com.lowcode.workflow.runner.graph.data.struct.template.Flow;
 import com.lowcode.workflow.runner.graph.data.struct.template.Node;
 import com.lowcode.workflow.runner.graph.handler.JsonTypeHandler;
@@ -20,6 +22,7 @@ import java.util.UUID;
  */
 
 @Data
+@TableName("flow_instances")
 public class FlowInstance {
 
     /**
@@ -36,6 +39,7 @@ public class FlowInstance {
         this.inputParams = flow.getConfig();
         this.startedAt = LocalDateTime.now();
         this.nodes = flow.getNodes();
+        this.edges = flow.getEdges();
     }
 
     /**
@@ -104,6 +108,9 @@ public class FlowInstance {
 
     @TableField(exist = false)
     private List<Node> nodes;
+
+    @TableField(exist = false)
+    private List<Edge> edges;
 
     @Getter
     public enum FlowInstanceStatus {

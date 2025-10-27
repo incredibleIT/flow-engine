@@ -8,7 +8,9 @@ import lombok.Data;
 import lombok.Getter;
 
 import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -53,6 +55,7 @@ public class Node {
     /**
      * 用户自定义数据的key
      */
+    @NotBlank(groups = {CreatGroup.class}, message = "用户自定义节点数据字段键不能为空")
     private String nodeDataFieldKey;
 
     /**
