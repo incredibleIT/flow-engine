@@ -1,12 +1,16 @@
 package com.lowcode.workflow.runner.graph.excutors.instance;
 
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.lowcode.workflow.runner.graph.annotation.NodeExecutorType;
 import com.lowcode.workflow.runner.graph.data.struct.instance.FlowInstance;
 import com.lowcode.workflow.runner.graph.data.struct.instance.NodeInstance;
+import com.lowcode.workflow.runner.graph.data.struct.template.Edge;
 import com.lowcode.workflow.runner.graph.excutors.NodeExecutor;
 import com.lowcode.workflow.runner.graph.excutors.entity.ExecutorResult;
+import com.lowcode.workflow.runner.graph.service.EdgeService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.Arrays;
@@ -18,8 +22,23 @@ import java.util.Map;
 @Component
 @NodeExecutorType(value = "start")
 public class StartNodeExecutor implements NodeExecutor {
+    @Autowired
+    private EdgeService edgeService;
+
     @Override
     public ExecutorResult execute(NodeInstance nodeInstance, FlowInstance flowInstance) {
+        LambdaQueryWrapper<Edge> edgeLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        edgeLambdaQueryWrapper.eq(Edge::getTarget, nodeInstance.getNodeId());
+        ExecutorResult lastNodeResult = null;
+        Edge edge = edgeService.getOne(edgeLambdaQueryWrapper);
+        if (edge != null) {
+            ExecutorResult context = flowInstance.getContext(edge.getSource());
+            if (context != null) {
+                lastNodeResult = context;
+            }
+            log.info("加载上一个节点的结果: {}", lastNodeResult);
+        }
+
         // 从key中取出用户自定义数据, 构建为ExecutorResult
         Map<String, Object> data = nodeInstance.getInputData();
         Map<String, String> res = new HashMap<>();

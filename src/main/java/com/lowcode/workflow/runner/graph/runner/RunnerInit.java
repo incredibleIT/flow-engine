@@ -14,16 +14,12 @@ import com.lowcode.workflow.runner.graph.service.FlowInstanceService;
 import com.lowcode.workflow.runner.graph.service.NodeInstanceService;
 import com.lowcode.workflow.runner.graph.utils.FlowGraphBuilder;
 import lombok.extern.slf4j.Slf4j;
-import org.jgraph.graph.DefaultEdge;
 import org.jgrapht.Graph;
 import org.jgrapht.traverse.BreadthFirstIterator;
-import org.jgrapht.traverse.DepthFirstIterator;
-import org.jgrapht.traverse.TopologicalOrderIterator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * 运行前初始化
@@ -69,6 +65,8 @@ public class RunnerInit {
                 throw new CustomException(510, "非法的节点类型, 请检查节点类型准确性重试");
             }
             ExecutorResult executorResult = nodeExecutor.execute(currentNodeInstance, flowInstance);
+            // 添加到context中
+            flowInstance.putContext(currentNodeInstance.getNodeId(), executorResult);
         }
     }
 

@@ -6,14 +6,17 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import com.lowcode.workflow.runner.graph.data.struct.template.Edge;
 import com.lowcode.workflow.runner.graph.data.struct.template.Flow;
 import com.lowcode.workflow.runner.graph.data.struct.template.Node;
+import com.lowcode.workflow.runner.graph.excutors.entity.ExecutorResult;
 import com.lowcode.workflow.runner.graph.handler.JsonTypeHandler;
 import lombok.Data;
 import lombok.Getter;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * 流程运行实例实体类
@@ -111,6 +114,22 @@ public class FlowInstance {
 
     @TableField(exist = false)
     private List<Edge> edges;
+
+    @TableField(exist = false)
+    private final Map<String, ExecutorResult> context = new ConcurrentHashMap<>();
+
+    public Map<String, ExecutorResult> getContext() {
+        return new HashMap<>(context);
+    }
+
+    public ExecutorResult getContext(String key) {
+        return context.get(key);
+    }
+
+    public void putContext(String nodeId, ExecutorResult value) {
+        context.put(nodeId, value);
+    }
+
 
     @Getter
     public enum FlowInstanceStatus {
