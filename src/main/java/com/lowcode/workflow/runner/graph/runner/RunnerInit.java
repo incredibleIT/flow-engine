@@ -43,7 +43,6 @@ public class RunnerInit {
         FlowInstance flowInstance = new FlowInstance(flow);
         // 存入数据库
         flowInstanceService.save(flowInstance);
-        // TODO 构建一个图数据结构
         log.info("——————————————构建一个图数据结构————————————");
         Graph<Node, FlowEdge> graph = FlowGraphBuilder.buildGraph(flowInstance.getNodes(), flowInstance.getEdges());
         run(flowInstance, graph);

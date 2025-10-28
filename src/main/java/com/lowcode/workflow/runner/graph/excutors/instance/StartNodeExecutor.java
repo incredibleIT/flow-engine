@@ -8,6 +8,7 @@ import com.lowcode.workflow.runner.graph.data.struct.instance.NodeInstance;
 import com.lowcode.workflow.runner.graph.data.struct.template.Edge;
 import com.lowcode.workflow.runner.graph.excutors.NodeExecutor;
 import com.lowcode.workflow.runner.graph.excutors.entity.ExecutorResult;
+import com.lowcode.workflow.runner.graph.machine.EventDispatcher;
 import com.lowcode.workflow.runner.graph.service.EdgeService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,6 +25,9 @@ import java.util.Map;
 public class StartNodeExecutor implements NodeExecutor {
     @Autowired
     private EdgeService edgeService;
+
+    @Autowired
+    private EventDispatcher eventDispatcher;
 
     @Override
     public ExecutorResult execute(NodeInstance nodeInstance, FlowInstance flowInstance) {
@@ -61,6 +65,7 @@ public class StartNodeExecutor implements NodeExecutor {
         }
         ExecutorResult executorResult = new ExecutorResult(res);
         log.info("StartNodeExecutor: executorResult: {}", executorResult);
+        eventDispatcher.dispatchEvent(nodeInstance, "completed");
         return executorResult;
     }
 }
