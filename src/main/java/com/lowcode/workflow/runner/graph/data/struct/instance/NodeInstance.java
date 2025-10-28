@@ -38,6 +38,7 @@ public class NodeInstance {
         this.startedAt = LocalDateTime.now();
         this.type = currentNode.getNodeType();
     }
+    public NodeInstance() {}
 
 
 

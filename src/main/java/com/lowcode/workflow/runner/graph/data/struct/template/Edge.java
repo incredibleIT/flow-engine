@@ -2,6 +2,8 @@ package com.lowcode.workflow.runner.graph.data.struct.template;
 
 import com.baomidou.mybatisplus.annotation.FieldFill;
 import com.baomidou.mybatisplus.annotation.TableField;
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
 import com.lowcode.workflow.runner.graph.handler.JsonTypeHandler;
 import lombok.Data;
 
@@ -13,16 +15,19 @@ import java.util.Map;
  * 对应数据库表：edges
  */
 @Data
+@TableName("edges")
 public class Edge {
 
     /**
      * 边唯一ID
      */
+    @TableId
     private String id;
 
     /**
      * 流程唯一ID，全局唯一
      */
+    @TableField("flowid")
     private String flowId;
 
     /**

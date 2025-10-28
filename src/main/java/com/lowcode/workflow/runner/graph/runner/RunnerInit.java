@@ -50,7 +50,6 @@ public class RunnerInit {
     }
 
     private void run (FlowInstance flowInstance, Graph<Node, FlowEdge> graph) {
-//        TopologicalOrderIterator<Node, FlowEdge> topologicalOrderIterator = new TopologicalOrderIterator<>(graph);
         Node entryNode = theEntryDegreeZero(graph);
         BreadthFirstIterator<Node, FlowEdge> breadthFirstIterator = new BreadthFirstIterator<>(graph, entryNode);
 
@@ -65,8 +64,14 @@ public class RunnerInit {
                 throw new CustomException(510, "非法的节点类型, 请检查节点类型准确性重试");
             }
             ExecutorResult executorResult = nodeExecutor.execute(currentNodeInstance, flowInstance);
+            if (executorResult == null) {
+                executorResult = new ExecutorResult();
+            }
             // 添加到context中
+            log.info("——————————当前运行节点: {}, 运行结果: {}", currentNodeInstance.getId(), executorResult);
             flowInstance.putContext(currentNodeInstance.getNodeId(), executorResult);
+            log.info("——————————当前节点: {}, 运行后的上下文: {}", currentNodeInstance.getId(), flowInstance.getContext());
+
         }
     }
 

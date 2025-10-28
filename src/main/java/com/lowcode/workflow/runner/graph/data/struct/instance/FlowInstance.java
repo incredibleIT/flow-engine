@@ -45,6 +45,8 @@ public class FlowInstance {
         this.edges = flow.getEdges();
     }
 
+    public FlowInstance() {}
+
     /**
      * 流程实例唯一ID（如 UUID 或业务生成的 trace ID）
      */
