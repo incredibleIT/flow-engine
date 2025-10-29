@@ -1,0 +1,78 @@
+package com.lowcode.workflow.runner.graph.runner;
+
+import com.lowcode.workflow.runner.graph.data.struct.instance.FlowInstance;
+import com.lowcode.workflow.runner.graph.data.struct.template.FlowEdge;
+import com.lowcode.workflow.runner.graph.data.struct.template.Node;
+import com.lowcode.workflow.runner.graph.pool.FlowThreadPool;
+import lombok.extern.slf4j.Slf4j;
+import org.jgrapht.Graph;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.*;
+
+@Slf4j
+@Component
+public class RunnerDispatcher {
+
+    @Autowired
+    private NodeDispatcher nodeDispatcher;
+
+
+
+    public CompletableFuture<Void> dispatch(FlowInstance flowInstance, List<Node> readyNodes, Graph<Node, FlowEdge> graph, FlowThreadPool flowThreadPool, Map<String, Integer> inDegreesMap, Map<String, List<Node>> downStream) {
+        // 初始状态, 将开始节点加入队列
+        BlockingQueue<Node> readyNodesBlocking = new LinkedBlockingQueue<>(readyNodes);
+
+        CountDownLatch latch = new CountDownLatch(graph.vertexSet().size());
+
+        CompletableFuture<Void> future = new CompletableFuture<>();
+
+        // 开启一个调度器线程
+        CompletableFuture.runAsync(() -> {
+            try {
+                log.info("latch count: {}", latch.getCount());
+                while (latch.getCount() > 0) {
+                    Node node = readyNodesBlocking.poll(1, TimeUnit.SECONDS);
+                    if (node == null) {
+                        continue;
+                    }
+
+                    flowThreadPool.execute(() -> {
+                        nodeDispatcher.dispatch(node, flowInstance);
+                        // 减少所有下游节点的入度, 如果入度为0, 则加入队列
+                        if (downStream.containsKey(node.getId())) {
+                            downStream.get(node.getId()).forEach(n -> {
+                                log.info("节点 {} 入度减少前为 {}", n.getId(), inDegreesMap.get(n.getId()));
+                                inDegreesMap.put(n.getId(), inDegreesMap.get(n.getId()) - 1);
+                                log.info("节点 {} 入度减少为 {}", n.getId(), inDegreesMap.get(n.getId()));
+                                if (inDegreesMap.get(n.getId()) == 0) {
+                                    readyNodesBlocking.offer(n);
+                                }
+                            });
+                        }
+
+
+                        latch.countDown();
+                    });
+                }
+
+
+            } catch (InterruptedException e) {
+                future.completeExceptionally(e);
+                throw new RuntimeException(e);
+            }
+
+            try {
+                latch.await(100, TimeUnit.MINUTES);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+            future.complete(null);
+
+        }, flowThreadPool.getThreadPoolExecutor());
+        return future;
+    }
+}

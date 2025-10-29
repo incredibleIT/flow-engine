@@ -5,7 +5,7 @@ mybatis-plus:
     # 开启下划线转驼峰命名
     map-underscore-to-camel-case: true
     # 开启SQL日志打印
-    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+#    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
 
 spring:
   application:
