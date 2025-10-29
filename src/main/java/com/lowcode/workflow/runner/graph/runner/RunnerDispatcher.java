@@ -30,7 +30,6 @@ public class RunnerDispatcher {
 
         CompletableFuture<Void> future = new CompletableFuture<>();
 
-        // 开启一个调度器线程
         CompletableFuture.runAsync(() -> {
             try {
                 log.info("latch count: {}", latch.getCount());
@@ -41,25 +40,27 @@ public class RunnerDispatcher {
                     }
 
                     flowThreadPool.execute(() -> {
-                        nodeDispatcher.dispatch(node, flowInstance);
-                        // 减少所有下游节点的入度, 如果入度为0, 则加入队列
-                        if (downStream.containsKey(node.getId())) {
-                            downStream.get(node.getId()).forEach(n -> {
-                                log.info("节点 {} 入度减少前为 {}", n.getId(), inDegreesMap.get(n.getId()));
-                                inDegreesMap.put(n.getId(), inDegreesMap.get(n.getId()) - 1);
-                                log.info("节点 {} 入度减少为 {}", n.getId(), inDegreesMap.get(n.getId()));
-                                if (inDegreesMap.get(n.getId()) == 0) {
-                                    readyNodesBlocking.offer(n);
-                                }
-                            });
+                        try {
+                            nodeDispatcher.dispatch(node, flowInstance);
+                            // 减少所有下游节点的入度, 如果入度为0, 则加入队列
+                            if (downStream.containsKey(node.getId())) {
+                                downStream.get(node.getId()).forEach(n -> {
+                                    log.info("节点 {} 入度减少前为 {}", n.getId(), inDegreesMap.get(n.getId()));
+                                    Integer i = inDegreesMap.computeIfPresent(n.getId(), (key, oldValue) -> oldValue - 1);
+                                    log.info("节点 {} 入度减少为 {}", n.getId(), i);
+                                    if (i != null && i == 0) {
+                                        readyNodesBlocking.offer(n);
+                                    }
+                                });
+                            }
+                        } catch (Exception e) {
+                            // TODO 将信息抛出去
+                            log.error("节点 {} 运行异常", node.getId(), e);
+                        } finally {
+                            latch.countDown();
                         }
-
-
-                        latch.countDown();
                     });
                 }
-
-
             } catch (InterruptedException e) {
                 future.completeExceptionally(e);
                 throw new RuntimeException(e);

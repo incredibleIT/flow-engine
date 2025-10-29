@@ -65,9 +65,6 @@ public class RunnerInit {
         }
 
         // 反向表: downStream 入度表: InDegreesMap 图结构: graph
-
-        // 就绪节点队列, 检查入度为0, 代表了两件事: 1. 可能是起点, 2. 之前的节点都运行完毕了, 可以运行当前节点
-        BlockingQueue<Node> readyNodes = new LinkedBlockingQueue<>();
         // 从这里开启流程, 基于事件来驱动
         // 初始化找到所有入度为0的节点
         List<Node> entryDegreeZeroNodes = getEntryDegreeZero(inDegreesMap, nodeMap);
