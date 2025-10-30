@@ -3,6 +3,7 @@ import com.baomidou.mybatisplus.annotation.EnumValue;
 import com.baomidou.mybatisplus.annotation.FieldFill;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.lowcode.workflow.runner.graph.context.SuspendedNodeContext;
 import com.lowcode.workflow.runner.graph.data.struct.template.Edge;
 import com.lowcode.workflow.runner.graph.data.struct.template.Flow;
 import com.lowcode.workflow.runner.graph.data.struct.template.Node;
@@ -117,8 +118,11 @@ public class FlowInstance {
     @TableField(exist = false)
     private List<Edge> edges;
 
-    @TableField(exist = false)
+    @TableField(typeHandler = JsonTypeHandler.class)
     private final Map<String, ExecutorResult> context = new ConcurrentHashMap<>();
+
+    @TableField(typeHandler = JsonTypeHandler.class)
+    private final Map<String, SuspendedNodeContext> suspendedNodeContext = new ConcurrentHashMap<>();
 
     public Map<String, ExecutorResult> getContext() {
         return new HashMap<>(context);
@@ -130,6 +134,10 @@ public class FlowInstance {
 
     public void putContext(String nodeId, ExecutorResult value) {
         context.put(nodeId, value);
+    }
+
+    public void putSuspendedNodeContext(String nodeId, SuspendedNodeContext value) {
+        this.suspendedNodeContext.put(nodeId, value);
     }
 
 

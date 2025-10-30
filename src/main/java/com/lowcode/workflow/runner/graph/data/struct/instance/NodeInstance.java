@@ -128,6 +128,7 @@ public class NodeInstance {
         running("running"),
         completed("completed"),
         failed("failed"),
+        resumed("resumed"),
         skipped("skipped"),
         waiting("waiting"),
         retrying("retrying");

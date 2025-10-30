@@ -1,6 +1,8 @@
 package com.lowcode.workflow.runner.graph.excutors.entity;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.util.HashMap;
 import java.util.List;
@@ -10,6 +12,8 @@ import java.util.Map;
  * 执行器返回结果
  */
 @Data
+@AllArgsConstructor
+@NoArgsConstructor
 public class ExecutorResult {
     private Map<String, String> userDefinedData;
     private Map<String, Object> nodeOutputData;
@@ -23,8 +27,9 @@ public class ExecutorResult {
         this.nodeOutputData = new HashMap<>();
     }
 
-    public ExecutorResult() {
-
+    public ExecutorResult(Map<String, String> userDefinedData, Map<String, Object> nodeOutputData) {
+        this.userDefinedData = userDefinedData;
+        this.nodeOutputData = nodeOutputData;
     }
 
     public void wait(String waitingReason) {
