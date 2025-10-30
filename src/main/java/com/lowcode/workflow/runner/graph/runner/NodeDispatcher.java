@@ -16,7 +16,6 @@ import org.springframework.stereotype.Component;
 @Component
 public class NodeDispatcher {
 
-
     @Autowired
     private NodeInstanceService nodeInstanceService;
 
@@ -45,6 +44,13 @@ public class NodeDispatcher {
             flowInstance.putContext(readyNode.getId(), executorResult);
             // 触发状态变更事件
             eventDispatcher.dispatchEvent(nodeInstance, "waiting", flowInstance);
+            return executorResult;
+        }
+        if (executorResult.getExecutorResultType() == ExecutorResult.ExecutorResultType.FAILED) {
+            // 构建上下文
+            flowInstance.putContext(readyNode.getId(), executorResult);
+            // 触发事件变更
+            eventDispatcher.dispatchEvent(nodeInstance, "failed", flowInstance);
             return executorResult;
         }
         // 构建上下文

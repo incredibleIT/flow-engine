@@ -6,9 +6,7 @@ import com.lowcode.workflow.runner.graph.data.struct.instance.FlowInstance;
 import com.lowcode.workflow.runner.graph.data.struct.instance.NodeInstance;
 import com.lowcode.workflow.runner.graph.excutors.NodeExecutor;
 import com.lowcode.workflow.runner.graph.excutors.entity.ExecutorResult;
-import com.lowcode.workflow.runner.graph.machine.EventDispatcher;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 @Slf4j

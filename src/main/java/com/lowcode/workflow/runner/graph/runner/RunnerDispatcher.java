@@ -45,6 +45,12 @@ public class RunnerDispatcher {
                             ExecutorResult executorResult = nodeDispatcher.dispatch(node, flowInstance);
                             if (executorResult.getExecutorResultType() == ExecutorResult.ExecutorResultType.WAITING) {
                                 log.info("节点 {} 等待, 等待原因: {}", node.getId(), executorResult.getWaitingReason());
+                                // 再次入队
+                                readyNodesBlocking.offer(node);
+                            } else if (executorResult.getExecutorResultType() == ExecutorResult.ExecutorResultType.FAILED) {
+                                log.info("节点 {} 执行失败, 失败原因: {}", node.getId(), executorResult.getErrorMessage());
+                                // TODO可添加逻辑 这里可以检查节点的重试机制, 如果具有重试剩余次数, 则减少重试次数, 并重新入队
+
                             } else {
                                 // 减少所有下游节点的入度, 如果入度为0, 则加入队列
                                 if (downStream.containsKey(node.getId())) {
