@@ -3,6 +3,7 @@ package com.lowcode.workflow.runner.graph.runner;
 import com.lowcode.workflow.runner.graph.data.struct.instance.FlowInstance;
 import com.lowcode.workflow.runner.graph.data.struct.template.FlowEdge;
 import com.lowcode.workflow.runner.graph.data.struct.template.Node;
+import com.lowcode.workflow.runner.graph.excutors.entity.ExecutorResult;
 import com.lowcode.workflow.runner.graph.pool.FlowThreadPool;
 import lombok.extern.slf4j.Slf4j;
 import org.jgrapht.Graph;
@@ -41,18 +42,23 @@ public class RunnerDispatcher {
 
                     flowThreadPool.execute(() -> {
                         try {
-                            nodeDispatcher.dispatch(node, flowInstance);
-                            // 减少所有下游节点的入度, 如果入度为0, 则加入队列
-                            if (downStream.containsKey(node.getId())) {
-                                downStream.get(node.getId()).forEach(n -> {
-                                    log.info("节点 {} 入度减少前为 {}", n.getId(), inDegreesMap.get(n.getId()));
-                                    Integer i = inDegreesMap.computeIfPresent(n.getId(), (key, oldValue) -> oldValue - 1);
-                                    log.info("节点 {} 入度减少为 {}", n.getId(), i);
-                                    if (i != null && i == 0) {
-                                        readyNodesBlocking.offer(n);
-                                    }
-                                });
+                            ExecutorResult executorResult = nodeDispatcher.dispatch(node, flowInstance);
+                            if (executorResult.getExecutorResultType() == ExecutorResult.ExecutorResultType.WAITING) {
+                                log.info("节点 {} 等待, 等待原因: {}", node.getId(), executorResult.getWaitingReason());
+                            } else {
+                                // 减少所有下游节点的入度, 如果入度为0, 则加入队列
+                                if (downStream.containsKey(node.getId())) {
+                                    downStream.get(node.getId()).forEach(n -> {
+                                        log.info("节点 {} 入度减少前为 {}", n.getId(), inDegreesMap.get(n.getId()));
+                                        Integer i = inDegreesMap.computeIfPresent(n.getId(), (key, oldValue) -> oldValue - 1);
+                                        log.info("节点 {} 入度减少为 {}", n.getId(), i);
+                                        if (i != null && i == 0) {
+                                            readyNodesBlocking.offer(n);
+                                        }
+                                    });
+                                }
                             }
+
                         } catch (Exception e) {
                             // TODO 将信息抛出去
                             log.error("节点 {} 运行异常", node.getId(), e);

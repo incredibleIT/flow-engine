@@ -45,7 +45,7 @@ public class GraphTest {
         FlowInstance flowInstance = new FlowInstance();
         flowInstance.setStatus(FlowInstance.FlowInstanceStatus.running);
 
-        eventDispatcher.dispatchEvent(flowInstance, "completed");
+//        eventDispatcher.dispatchEvent(flowInstance, "completed");
         System.out.println(flowInstance);
     }
 }

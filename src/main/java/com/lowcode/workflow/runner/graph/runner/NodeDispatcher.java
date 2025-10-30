@@ -8,6 +8,7 @@ import com.lowcode.workflow.runner.graph.exception.custom.CustomException;
 import com.lowcode.workflow.runner.graph.excutors.NodeExecutor;
 import com.lowcode.workflow.runner.graph.excutors.NodeExecutorRegistry;
 import com.lowcode.workflow.runner.graph.excutors.entity.ExecutorResult;
+import com.lowcode.workflow.runner.graph.machine.EventDispatcher;
 import com.lowcode.workflow.runner.graph.service.NodeInstanceService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -21,9 +22,11 @@ public class NodeDispatcher {
 
     @Autowired
     private NodeExecutorRegistry nodeExecutorRegistry;
+    @Autowired
+    private EventDispatcher eventDispatcher;
 
 
-    public void dispatch(Node readyNode, FlowInstance flowInstance) throws CustomException {
+    public ExecutorResult dispatch(Node readyNode, FlowInstance flowInstance) throws CustomException {
         // 实例化
         NodeInstance nodeInstance = this.toNodeInstance(readyNode, flowInstance);
         nodeInstanceService.save(nodeInstance);
@@ -37,8 +40,16 @@ public class NodeDispatcher {
         if (executorResult == null) {
             executorResult = new ExecutorResult();
         }
+        if (executorResult.getExecutorResultType() == ExecutorResult.ExecutorResultType.WAITING) {
+            // 构建上下文
+            flowInstance.putContext(readyNode.getId(), executorResult);
+            // 触发状态变更事件
+            eventDispatcher.dispatchEvent(nodeInstance, "waiting", flowInstance);
+            return executorResult;
+        }
         // 构建上下文
         flowInstance.putContext(readyNode.getId(), executorResult);
+        return executorResult;
     }
 
 

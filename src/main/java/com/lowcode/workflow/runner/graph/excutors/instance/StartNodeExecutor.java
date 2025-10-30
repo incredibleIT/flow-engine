@@ -31,7 +31,7 @@ public class StartNodeExecutor implements NodeExecutor {
 
     @Override
     public ExecutorResult execute(NodeInstance nodeInstance, FlowInstance flowInstance) {
-        eventDispatcher.dispatchEvent(nodeInstance, "running");
+        eventDispatcher.dispatchEvent(nodeInstance, "running", flowInstance);
         LambdaQueryWrapper<Edge> edgeLambdaQueryWrapper = new LambdaQueryWrapper<>();
         edgeLambdaQueryWrapper.eq(Edge::getTarget, nodeInstance.getNodeId());
         ExecutorResult lastNodeResult = null;
@@ -65,8 +65,9 @@ public class StartNodeExecutor implements NodeExecutor {
             }
         }
         ExecutorResult executorResult = new ExecutorResult(res);
+        executorResult.setExecutorResultType(ExecutorResult.ExecutorResultType.SUCCESS);
         log.info("StartNodeExecutor: executorResult: {}", executorResult);
-        eventDispatcher.dispatchEvent(nodeInstance, "completed");
+        eventDispatcher.dispatchEvent(nodeInstance, "completed", flowInstance);
         log.info("向量机执行完成: startNodeState: {}", nodeInstance.getStatus());
         return executorResult;
     }

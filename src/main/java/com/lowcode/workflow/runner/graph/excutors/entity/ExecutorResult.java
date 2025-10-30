@@ -13,6 +13,9 @@ import java.util.Map;
 public class ExecutorResult {
     private Map<String, String> userDefinedData;
     private Map<String, Object> nodeOutputData;
+    private String errorMessage;
+    private String waitingReason;
+    private ExecutorResultType executorResultType;
 
 
     public ExecutorResult(Map<String, String> userDefinedData) {
@@ -22,5 +25,16 @@ public class ExecutorResult {
 
     public ExecutorResult() {
 
+    }
+
+    public void wait(String waitingReason) {
+        this.waitingReason = waitingReason;
+        this.executorResultType = ExecutorResultType.WAITING;
+    }
+
+    public enum ExecutorResultType {
+        SUCCESS,
+        FAILED,
+        WAITING
     }
 }
