@@ -5,7 +5,6 @@ import com.lowcode.workflow.runner.graph.data.struct.instance.FlowInstance;
 import com.lowcode.workflow.runner.graph.data.struct.template.Flow;
 import com.lowcode.workflow.runner.graph.data.struct.template.FlowEdge;
 import com.lowcode.workflow.runner.graph.data.struct.template.Node;
-import com.lowcode.workflow.runner.graph.exception.custom.CustomException;
 import com.lowcode.workflow.runner.graph.pool.FlowThreadPool;
 import com.lowcode.workflow.runner.graph.service.FlowInstanceService;
 import com.lowcode.workflow.runner.graph.utils.FlowGraphBuilder;
@@ -78,50 +77,6 @@ public class RunnerInit {
         pool.shutdown();
 
     }
-
-//    private void run (FlowInstance flowInstance, Graph<Node, FlowEdge> graph) {
-//        Node entryNode = theEntryDegreeZero(graph);
-//        BreadthFirstIterator<Node, FlowEdge> breadthFirstIterator = new BreadthFirstIterator<>(graph, entryNode);
-//
-//        while (breadthFirstIterator.hasNext()) {
-//            Node currentNode = breadthFirstIterator.next();
-//            NodeInstance currentNodeInstance = toNodeInstance(currentNode, flowInstance);
-//            nodeInstanceService.save(currentNodeInstance);
-//
-//            // 运行
-//            NodeExecutor nodeExecutor = nodeExecutorRegistry.get(currentNodeInstance.getNodeType());
-//
-//            ExecutorResult executorResult = nodeExecutor.execute(currentNodeInstance, flowInstance);
-//            if (executorResult == null) {
-//                executorResult = new ExecutorResult();
-//            }
-//            // 添加到context中
-//            log.info("——————————当前运行节点: {}, 运行结果: {}", currentNodeInstance.getId(), executorResult);
-//            flowInstance.putContext(currentNodeInstance.getNodeId(), executorResult);
-//            log.info("——————————当前节点: {}, 运行后的上下文: {}", currentNodeInstance.getId(), flowInstance.getContext());
-//
-//        }
-//    }
-
-    // TODO 目前暂时指定一个流程一个起点
-    // 后续可以考虑支持多个起点
-    private Node theEntryDegreeZero(Graph<Node, FlowEdge> graph) {
-        List<Node> entryZeroNodes = graph.vertexSet().stream()
-                .filter(node -> graph.inDegreeOf(node) == 0)
-                .toList();
-
-        if (entryZeroNodes.isEmpty()) {
-            throw new CustomException(510, "流程定义异常, 没有正确的入口");
-        }
-
-        if (entryZeroNodes.size() > 1) {
-            throw new CustomException(510, "流程定义异常, 只能有一个入口");
-        }
-
-        return entryZeroNodes.get(0);
-    }
-
-
 
 
     private FlowThreadPool getThreadPool() {

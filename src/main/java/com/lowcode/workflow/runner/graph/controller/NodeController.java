@@ -10,7 +10,10 @@ import com.lowcode.workflow.runner.graph.excutors.NodeExecutor;
 import com.lowcode.workflow.runner.graph.excutors.NodeExecutorRegistry;
 import com.lowcode.workflow.runner.graph.excutors.entity.ExecutorResult;
 import com.lowcode.workflow.runner.graph.machine.EventDispatcher;
+import com.lowcode.workflow.runner.graph.pool.FlowThreadPool;
 import com.lowcode.workflow.runner.graph.result.Result;
+import com.lowcode.workflow.runner.graph.runner.RunnerDispatcher;
+import com.lowcode.workflow.runner.graph.runner.RunnerInit;
 import com.lowcode.workflow.runner.graph.service.FlowInstanceService;
 import com.lowcode.workflow.runner.graph.service.NodeInstanceService;
 import com.lowcode.workflow.runner.graph.service.NodeService;
@@ -26,6 +29,7 @@ import javax.validation.constraints.NotNull;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ThreadPoolExecutor;
 
 @RestController
 @RequestMapping("/api/node")
@@ -47,6 +51,10 @@ public class NodeController {
     private NodeExecutorRegistry nodeExecutorRegistry;
     @Autowired
     private EventDispatcher eventDispatcher;
+    @Autowired
+    private RunnerDispatcher runnerDispatcher;
+    @Autowired
+    private RunnerInit runnerInit;
 
     /**
      * 查找一个流程模版下所有节点
@@ -140,8 +148,12 @@ public class NodeController {
 
         // 触发节点恢复状态事件
         eventDispatcher.dispatchEvent(nodeInstance, "resumed", flowInstance);
-
+        runnerDispatcher.resume(flowInstance, nodeInstance, getThreadPool());
         return Result.success();
+    }
+
+    private FlowThreadPool getThreadPool() {
+        return new FlowThreadPool(4, 8, 60L, 100, "MyTaskPool", new ThreadPoolExecutor.AbortPolicy());
     }
 
 

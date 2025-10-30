@@ -12,14 +12,12 @@ import com.lowcode.workflow.runner.graph.pool.FlowThreadPool;
 import com.lowcode.workflow.runner.graph.service.FlowInstanceService;
 import lombok.extern.slf4j.Slf4j;
 import org.jgrapht.Graph;
-import org.jgrapht.traverse.DepthFirstIterator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.*;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Component
@@ -66,6 +64,7 @@ public class RunnerDispatcher {
                                 flowInstance.putSuspendedNodeContext(node.getId(), context);
                                 // 更新流程实例
                                 flowInstanceService.updateById(flowInstance);
+                                future.complete(null);
                             } else if (executorResult.getExecutorResultType() == ExecutorResult.ExecutorResultType.FAILED) {
                                 log.info("节点 {} 执行失败, 失败原因: {}", node.getId(), executorResult.getErrorMessage());
                                 // TODO可添加逻辑 这里可以检查节点的重试机制, 如果具有重试剩余次数, 则减少重试次数, 并重新入队
@@ -106,7 +105,7 @@ public class RunnerDispatcher {
     }
 
 
-    public CompletableFuture<Void> resume(FlowInstance flowInstance, NodeInstance nodeInstance, FlowThreadPool flowThreadPool, Graph<Node, FlowEdge> graph) {
+    public void resume(FlowInstance flowInstance, NodeInstance nodeInstance, FlowThreadPool flowThreadPool) {
         // 从上下文获取恢复数据
         SuspendedNodeContext suspendedNodeContext = flowInstance.getSuspendedNodeContext().get(nodeInstance.getNodeId());
         if (suspendedNodeContext == null) {
@@ -128,8 +127,6 @@ public class RunnerDispatcher {
                 resumeNodes.offer(n);
             }
         });
-
-        CompletableFuture<Void> future = new CompletableFuture<>();
 
         CompletableFuture.runAsync(() -> {
             try {
@@ -183,10 +180,7 @@ public class RunnerDispatcher {
                 throw new RuntimeException(e);
             }
             phaser.arriveAndAwaitAdvance();
-            future.complete(null);
 
         }, flowThreadPool.getThreadPoolExecutor());
-
-        return future;
     }
 }
