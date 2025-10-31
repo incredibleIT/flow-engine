@@ -35,22 +35,18 @@ public class RunnerDispatcher {
         // 初始状态, 将开始节点加入队列
         BlockingQueue<Node> readyNodesBlocking = new LinkedBlockingQueue<>(readyNodes);
 
-//        CountDownLatch latch = new CountDownLatch(graph.vertexSet().size());
-        Phaser phaser = new Phaser(1);
-        for (Node node : readyNodes) {
-            phaser.register();
-        }
+
         CompletableFuture<Void> future = new CompletableFuture<>();
 
+        CountDownLatch latch = new CountDownLatch(readyNodes.size());
+
         CompletableFuture.runAsync(() -> {
+
             try {
-                log.info("phaser count: {}", phaser.getRegisteredParties());
-                while (true) {
+                while (latch.getCount() > 0) {
+
                     Node node = readyNodesBlocking.poll(1, TimeUnit.SECONDS);
                     if (node == null) {
-                        if (phaser.getRegisteredParties() == 1) {
-                            break;
-                        }
                         continue;
                     }
 
@@ -64,7 +60,7 @@ public class RunnerDispatcher {
                                 flowInstance.putSuspendedNodeContext(node.getId(), context);
                                 // 更新流程实例
                                 flowInstanceService.updateById(flowInstance);
-                                future.complete(null);
+
                             } else if (executorResult.getExecutorResultType() == ExecutorResult.ExecutorResultType.FAILED) {
                                 log.info("节点 {} 执行失败, 失败原因: {}", node.getId(), executorResult.getErrorMessage());
                                 // TODO可添加逻辑 这里可以检查节点的重试机制, 如果具有重试剩余次数, 则减少重试次数, 并重新入队
@@ -78,7 +74,6 @@ public class RunnerDispatcher {
                                         log.info("节点 {} 入度减少为 {}", n.getId(), i);
                                         if (i != null && i == 0) {
                                             readyNodesBlocking.offer(n);
-                                            phaser.register();
                                         }
                                     });
                                 }
@@ -88,7 +83,7 @@ public class RunnerDispatcher {
                             // TODO 将信息抛出去
                             log.error("节点 {} 运行异常", node.getId(), e);
                         } finally {
-                            phaser.arrive();
+                            latch.countDown();
                         }
                     });
                 }
@@ -97,7 +92,11 @@ public class RunnerDispatcher {
                 throw new RuntimeException(e);
             }
 
-            phaser.arriveAndAwaitAdvance();
+            try {
+                latch.await();
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
             future.complete(null);
 
         }, flowThreadPool.getThreadPoolExecutor());
@@ -134,7 +133,7 @@ public class RunnerDispatcher {
                     Node node = resumeNodes.poll(1, TimeUnit.SECONDS);
                     if (node == null) {
                         if (phaser.getRegisteredParties() == 1) {
-                            break ;
+                            break;
                         }
                         continue;
                     }
