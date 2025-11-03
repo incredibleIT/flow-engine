@@ -13,6 +13,7 @@ import com.lowcode.workflow.runner.graph.machine.EventDispatcher;
 import com.lowcode.workflow.runner.graph.pool.FlowThreadPool;
 import com.lowcode.workflow.runner.graph.result.Result;
 import com.lowcode.workflow.runner.graph.runner.RunnerDispatcher;
+import com.lowcode.workflow.runner.graph.runner.RunnerDispatcherAsync;
 import com.lowcode.workflow.runner.graph.runner.RunnerInit;
 import com.lowcode.workflow.runner.graph.service.FlowInstanceService;
 import com.lowcode.workflow.runner.graph.service.NodeInstanceService;
@@ -20,6 +21,7 @@ import com.lowcode.workflow.runner.graph.service.NodeService;
 import com.lowcode.workflow.runner.graph.service.NodeTypeService;
 import com.lowcode.workflow.runner.graph.validation.CreatGroup;
 import com.lowcode.workflow.runner.graph.validation.UpdateGroup;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -31,6 +33,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ThreadPoolExecutor;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/node")
 public class NodeController {
@@ -55,6 +58,8 @@ public class NodeController {
     private RunnerDispatcher runnerDispatcher;
     @Autowired
     private RunnerInit runnerInit;
+    @Autowired
+    private RunnerDispatcherAsync runnerDispatcherAsync;
 
     /**
      * 查找一个流程模版下所有节点
@@ -121,16 +126,19 @@ public class NodeController {
 
     @PostMapping("/resume/{flowInstanceId}/{nodeInstanceId}")
     public Result<Void> resume(@PathVariable("flowInstanceId") @NotBlank(message = "流程实例ID不能为空") String flowInstanceId,
-                               @PathVariable("nodeInstanceId") @NotBlank(message = "节点实例ID不能为空") String nodeInstanceId,
-                               @RequestBody Map<String, Object> resumeData) {
+                               @PathVariable("nodeInstanceId") @NotBlank(message = "节点实例ID不能为空") String nodeInstanceId) {
         FlowInstance flowInstance = flowInstanceService.getById(flowInstanceId);
         NodeInstance nodeInstance = nodeInstanceService.getById(nodeInstanceId);
-        if (flowInstance == null) {
-            throw new CustomException(500, "流程实例不存在");
-        }
         if (nodeInstance == null) {
             throw new CustomException(500, "节点实例不存在");
         }
+        LambdaQueryWrapper<Node> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(Node::getId, nodeInstance.getNodeId());
+        Node node = nodeService.getOne(wrapper);
+        if (flowInstance == null) {
+            throw new CustomException(500, "流程实例不存在");
+        }
+
         if (nodeInstance.getStatus() != NodeInstance.NodeInstanceStatus.waiting) {
             throw new CustomException(500, "节点实例状态不是等待中，不能恢复");
         }
@@ -142,12 +150,11 @@ public class NodeController {
         if (!nodeExecutor.supportResume()) {
             throw new CustomException(500, "当前节点类型的执行器不支持恢复");
         }
-
-        flowInstance.putContext(nodeInstance.getNodeId(), new ExecutorResult(new HashMap<>(), resumeData));
-
         // 触发节点恢复状态事件
         eventDispatcher.dispatchEvent(nodeInstance, "resumed", flowInstance);
-        runnerDispatcher.resume(flowInstance, nodeInstance, getThreadPool());
+        runnerDispatcherAsync.resume(flowInstance, node).thenRun(() -> {
+            log.info("resume node: {}", nodeInstance.getNodeId());
+        });
         return Result.success();
     }
 

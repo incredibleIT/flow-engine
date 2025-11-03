@@ -70,6 +70,7 @@ public class RunnerDispatcherAsync {
         // trigger完成后执行当前节点
         trigger.thenRunAsync(() -> {
             try {
+                log.info("节点{}开始执行", nodeId);
                 ExecutorResult result = nodeDispatcher.dispatch(node, flowInstance);
 
                 switch (result.getExecutorResultType()) {
@@ -94,6 +95,15 @@ public class RunnerDispatcherAsync {
            nodeFuture.completeExceptionally(ex);
            return null;
         });
+    }
+
+
+
+
+    public CompletableFuture<Void> resume(FlowInstance flowInstance, Node node) {
+        CompletableFuture<ExecutorResult> nodeFuture = getNodeFuture(node.getId(), flowInstance);
+        nodeFuture.complete(new ExecutorResult());
+        return CompletableFuture.completedFuture(null);
     }
 
 

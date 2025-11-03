@@ -32,6 +32,7 @@ public class Node {
      * 流程唯一ID，全局唯一
      */
     @NotBlank(groups = {CreatGroup.class}, message = "流程ID不能为空")
+    @TableField("flowid")
     private String flowId;
 
     /**

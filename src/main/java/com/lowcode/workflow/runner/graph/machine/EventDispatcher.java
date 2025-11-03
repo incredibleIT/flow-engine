@@ -52,13 +52,11 @@ public class EventDispatcher {
         }
         NodeInstance nodeInstance = (NodeInstance) entity;
 
-        List<String> pres = graphService.getThePresOfNode(nodeInstance.getNodeId());
-        Map<String, ExecutorResult> context = flowInstance.getContext();
-        for (String pre : pres) {
-            if (!context.containsKey(pre)) {
-                throw new CustomException(500, "前序节点" + pre + "的执行结果不存在");
-            }
-        }
+//        List<String> pres = graphService.getThePresOfNode(nodeInstance.getNodeId());
+//        Map<String, ExecutorResult> context = flowInstance.getContext();
+//        if (!context.containsKey(pres.get(0))) {
+//            throw new CustomException(500, "前序节点" + pres.get(0) + "的执行结果不存在");
+//        }
         stateMachine.transition(entity, event);
     }
 }

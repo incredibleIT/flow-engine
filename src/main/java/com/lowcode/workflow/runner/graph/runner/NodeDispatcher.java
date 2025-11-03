@@ -10,9 +10,11 @@ import com.lowcode.workflow.runner.graph.excutors.NodeExecutorRegistry;
 import com.lowcode.workflow.runner.graph.excutors.entity.ExecutorResult;
 import com.lowcode.workflow.runner.graph.machine.EventDispatcher;
 import com.lowcode.workflow.runner.graph.service.NodeInstanceService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+@Slf4j
 @Component
 public class NodeDispatcher {
 
@@ -29,6 +31,7 @@ public class NodeDispatcher {
         // 实例化
         NodeInstance nodeInstance = this.toNodeInstance(readyNode, flowInstance);
         nodeInstanceService.save(nodeInstance);
+        log.info("实例化节点 {}", nodeInstance);
         // 执行器
         NodeExecutor nodeExecutor = nodeExecutorRegistry.get(readyNode.getType());
         if (nodeExecutor == null) {
@@ -44,6 +47,7 @@ public class NodeDispatcher {
             flowInstance.putContext(readyNode.getId(), executorResult);
             // 触发状态变更事件
             eventDispatcher.dispatchEvent(nodeInstance, "waiting", flowInstance);
+            nodeInstanceService.updateById(nodeInstance);
             return executorResult;
         }
         if (executorResult.getExecutorResultType() == ExecutorResult.ExecutorResultType.FAILED) {
@@ -51,6 +55,7 @@ public class NodeDispatcher {
             flowInstance.putContext(readyNode.getId(), executorResult);
             // 触发事件变更
             eventDispatcher.dispatchEvent(nodeInstance, "failed", flowInstance);
+            nodeInstanceService.updateById(nodeInstance);
             return executorResult;
         }
         // 构建上下文

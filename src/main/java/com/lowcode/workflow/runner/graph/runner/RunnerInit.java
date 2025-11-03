@@ -50,22 +50,12 @@ public class RunnerInit {
     private void runAsync(FlowInstance flowInstance, Graph<Node, FlowEdge> graph) {
         FlowThreadPool pool = getThreadPool();
         runnerDispatcherAsync.dispatch(flowInstance, graph, pool);
-        CompletableFuture.allOf(flowInstance.getNodeFutureMap().values().toArray(new CompletableFuture[0])).thenRun(pool::shutdown);
+        CompletableFuture.allOf(flowInstance.getNodeFutureMap().values().toArray(new CompletableFuture[0])).join();
     }
 
 
     private FlowThreadPool getThreadPool() {
         return new FlowThreadPool(4, 8, 60L, 100, "MyTaskPool", new ThreadPoolExecutor.AbortPolicy());
-    }
-
-    private List<Node> getEntryDegreeZero(Map<String, Integer> InDegreesMap, Map<String, Node> nodeMap) {
-        List<Node> nodes = new ArrayList<>();
-        for (Map.Entry<String, Integer> entry : InDegreesMap.entrySet()) {
-            if (entry.getValue() == 0) {
-                nodes.add(nodeMap.get(entry.getKey()));
-            }
-        }
-        return nodes;
     }
 
 

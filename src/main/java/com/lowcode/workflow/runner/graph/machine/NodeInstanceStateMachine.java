@@ -19,6 +19,8 @@ public class NodeInstanceStateMachine implements StateMachine<NodeInstance>{
                 if ("running".equals(event)) {
                     nodeInstance.setStatus(NodeInstance.NodeInstanceStatus.running);
                     nodeInstance.setStartedAt(LocalDateTime.now());
+                } else if ("waiting".equals(event)) {
+                    nodeInstance.setStatus(NodeInstance.NodeInstanceStatus.waiting);
                 }
                 break;
             case running:
