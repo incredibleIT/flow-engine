@@ -124,6 +124,14 @@ public class NodeController {
         return Result.success();
     }
 
+
+    /**
+     * TODO BUG flowInstance中的futureMap没有持久化, 所以只是新建一个新的CompletableFuture, 而不是从futureMap中保存的上下文
+     * @param flowInstanceId 流程实例ID
+     * @param flowInstanceId
+     * @param nodeInstanceId
+     * @return
+     */
     @PostMapping("/resume/{flowInstanceId}/{nodeInstanceId}")
     public Result<Void> resume(@PathVariable("flowInstanceId") @NotBlank(message = "流程实例ID不能为空") String flowInstanceId,
                                @PathVariable("nodeInstanceId") @NotBlank(message = "节点实例ID不能为空") String nodeInstanceId) {
