@@ -143,7 +143,6 @@ public class NodeController {
             throw new CustomException(500, "当前节点类型的执行器不支持恢复");
         }
 
-        // TODO 将审批后的数据添加到上下文中
         flowInstance.putContext(nodeInstance.getNodeId(), new ExecutorResult(new HashMap<>(), resumeData));
 
         // 触发节点恢复状态事件

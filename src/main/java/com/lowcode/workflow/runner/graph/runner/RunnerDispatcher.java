@@ -34,16 +34,13 @@ public class RunnerDispatcher {
     public CompletableFuture<Void> dispatch(FlowInstance flowInstance, List<Node> readyNodes, Graph<Node, FlowEdge> graph, FlowThreadPool flowThreadPool, Map<String, Integer> inDegreesMap, Map<String, List<Node>> downStream) {
         // 初始状态, 将开始节点加入队列
         BlockingQueue<Node> readyNodesBlocking = new LinkedBlockingQueue<>(readyNodes);
-
-
         CompletableFuture<Void> future = new CompletableFuture<>();
-
-        CountDownLatch latch = new CountDownLatch(readyNodes.size());
-
+        CountDownLatch latch = new CountDownLatch(graph.vertexSet().size());
         CompletableFuture.runAsync(() -> {
 
             try {
                 while (latch.getCount() > 0) {
+                    log.info("latch count: {}", latch.getCount());
 
                     Node node = readyNodesBlocking.poll(1, TimeUnit.SECONDS);
                     if (node == null) {
@@ -60,6 +57,10 @@ public class RunnerDispatcher {
                                 flowInstance.putSuspendedNodeContext(node.getId(), context);
                                 // 更新流程实例
                                 flowInstanceService.updateById(flowInstance);
+
+                                for (int i = 1; i <= latch.getCount(); i++) {
+                                    latch.countDown();
+                                }
 
                             } else if (executorResult.getExecutorResultType() == ExecutorResult.ExecutorResultType.FAILED) {
                                 log.info("节点 {} 执行失败, 失败原因: {}", node.getId(), executorResult.getErrorMessage());
@@ -84,6 +85,7 @@ public class RunnerDispatcher {
                             log.error("节点 {} 运行异常", node.getId(), e);
                         } finally {
                             latch.countDown();
+                            log.info("latch count2: {}", latch.getCount());
                         }
                     });
                 }
@@ -117,11 +119,10 @@ public class RunnerDispatcher {
         // 触发挂起节点的状态变更
         eventDispatcher.dispatchEvent(nodeInstance, "completed", flowInstance);
         Phaser phaser = new Phaser(1);
+        CountDownLatch countDownLatch = new CountDownLatch(0);
         // 初始化先将下游节点入度减少
         downStreamSnapshot.get(nodeInstance.getNodeId()).forEach(n -> {
-            log.info("节点 {} 入度减少前为 {}", n.getId(), inDegreesSnapshot.get(n.getId()));
             Integer i = inDegreesSnapshot.computeIfPresent(n.getId(), (key, oldValue) -> oldValue - 1);
-            log.info("节点 {} 入度减少为 {}", n.getId(), i);
             if (i != null && i == 0) {
                 resumeNodes.offer(n);
             }
