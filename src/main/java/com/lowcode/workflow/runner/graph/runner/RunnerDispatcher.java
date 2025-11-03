@@ -66,6 +66,10 @@ public class RunnerDispatcher {
                                 log.info("节点 {} 执行失败, 失败原因: {}", node.getId(), executorResult.getErrorMessage());
                                 // TODO可添加逻辑 这里可以检查节点的重试机制, 如果具有重试剩余次数, 则减少重试次数, 并重新入队
 
+                                for (int i = 1; i <= latch.getCount(); i++) {
+                                    latch.countDown();
+                                }
+
                             } else {
                                 // 减少所有下游节点的入度, 如果入度为0, 则加入队列
                                 if (downStream.containsKey(node.getId())) {

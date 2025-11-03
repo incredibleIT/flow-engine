@@ -13,10 +13,8 @@ import lombok.Data;
 import lombok.Getter;
 
 import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -123,6 +121,9 @@ public class FlowInstance {
 
     @TableField(typeHandler = JsonTypeHandler.class)
     private final Map<String, SuspendedNodeContext> suspendedNodeContext = new ConcurrentHashMap<>();
+
+    @TableField(exist = false)
+    private Map<String, CompletableFuture<ExecutorResult>> nodeFutureMap = new ConcurrentHashMap<>();
 
     public Map<String, ExecutorResult> getContext() {
         return new HashMap<>(context);
