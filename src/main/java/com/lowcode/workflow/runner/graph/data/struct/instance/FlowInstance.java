@@ -122,7 +122,7 @@ public class FlowInstance {
     @TableField(typeHandler = JsonTypeHandler.class)
     private final Map<String, SuspendedNodeContext> suspendedNodeContext = new ConcurrentHashMap<>();
 
-    @TableField(exist = false)
+    @TableField(typeHandler = JsonTypeHandler.class)
     private Map<String, CompletableFuture<ExecutorResult>> nodeFutureMap = new ConcurrentHashMap<>();
 
     public Map<String, ExecutorResult> getContext() {
