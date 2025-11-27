@@ -58,7 +58,7 @@ public class FlowController {
      * @return 流程详情
      */
     @GetMapping("/detail/{flowId}")
-    public Result<Flow> detail(@PathVariable("flowId") @NotNull(message = "流程ID不能为空") Integer flowId) {
+    public Result<Flow> detail(@PathVariable("flowId") @NotNull(message = "流程ID不能为空") String flowId) {
         Flow flow = flowService.getById(flowId);
         if (flow == null) {
             throw new CustomException("这里是一个业务异常, 原因: 流程不存在");
@@ -103,7 +103,7 @@ public class FlowController {
      * @param flowId 流程ID
      */
     @DeleteMapping("/delete/{flowId}")
-    public Result<Void> delete(@PathVariable("flowId") @NotNull(message = "流程ID不能为空") Integer flowId) {
+    public Result<Void> delete(@PathVariable("flowId") @NotNull(message = "流程ID不能为空") String flowId) {
         flowService.removeById(flowId);
         // TODO 级联删除所有关联的节点和边
         return Result.success();
