@@ -18,6 +18,9 @@ public class NodeInstanceStateMachine implements StateMachine<NodeInstance>{
     @Autowired
     private NodeStatusWebSocketHandler webSocketHandler;
 
+    @Autowired
+    private NodeStatusWebSocketHandler nodeStatusWebSocketHandler;
+
 
     @Override
     public void transition(NodeInstance nodeInstance, String event) {
@@ -27,28 +30,35 @@ public class NodeInstanceStateMachine implements StateMachine<NodeInstance>{
                     nodeInstance.setStatus(NodeInstance.NodeInstanceStatus.running);
                     webSocketHandler.sendNodeStatusUpdate(nodeInstance.getId(), nodeInstance.getNodeId(), NodeInstance.NodeInstanceStatus.running.toString());
                     nodeInstance.setStartedAt(LocalDateTime.now());
+                    nodeStatusWebSocketHandler.sendNodeStatusUpdate(nodeInstance.getId(), nodeInstance.getNodeId(), NodeInstance.NodeInstanceStatus.running.getValue());
                 } else if ("waiting".equals(event)) {
                     nodeInstance.setStatus(NodeInstance.NodeInstanceStatus.waiting);
+                    nodeStatusWebSocketHandler.sendNodeStatusUpdate(nodeInstance.getId(), nodeInstance.getNodeId(), NodeInstance.NodeInstanceStatus.waiting.getValue());
                 }
                 break;
             case running:
                 if ("completed".equals(event)) {
                     nodeInstance.setStatus(NodeInstance.NodeInstanceStatus.completed);
                     nodeInstance.setEndedAt(LocalDateTime.now());
+                    nodeStatusWebSocketHandler.sendNodeStatusUpdate(nodeInstance.getId(), nodeInstance.getNodeId(), NodeInstance.NodeInstanceStatus.completed.getValue());
                 } else if ("failed".equals(event)) {
                     nodeInstance.setStatus(NodeInstance.NodeInstanceStatus.failed);
                     nodeInstance.setErrorMessage("节点运行失败");
+                    nodeStatusWebSocketHandler.sendNodeStatusUpdate(nodeInstance.getId(), nodeInstance.getNodeId(), NodeInstance.NodeInstanceStatus.failed.getValue());
                 } else if ("waiting".equals(event)) {
                     nodeInstance.setStatus(NodeInstance.NodeInstanceStatus.waiting);
+                    nodeStatusWebSocketHandler.sendNodeStatusUpdate(nodeInstance.getId(), nodeInstance.getNodeId(), NodeInstance.NodeInstanceStatus.waiting.getValue());
                 } else if ("retrying".equals(event)) {
                     nodeInstance.setStatus(NodeInstance.NodeInstanceStatus.retrying);
                     nodeInstance.setRetryCount(nodeInstance.getRetryCount() + 1);
+                    nodeStatusWebSocketHandler.sendNodeStatusUpdate(nodeInstance.getId(), nodeInstance.getNodeId(), NodeInstance.NodeInstanceStatus.retrying.getValue());
                 }
                 break;
             case retrying:
                 if ("completed".equals(event)) {
                     nodeInstance.setStatus(NodeInstance.NodeInstanceStatus.completed);
                     nodeInstance.setEndedAt(LocalDateTime.now());
+                    nodeStatusWebSocketHandler.sendNodeStatusUpdate(nodeInstance.getId(), nodeInstance.getNodeId(), NodeInstance.NodeInstanceStatus.completed.getValue());
                 }
         }
     }

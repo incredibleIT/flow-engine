@@ -3,6 +3,7 @@ package com.lowcode.workflow.runner.graph.websocket.handler;
 import com.lowcode.workflow.runner.graph.exception.custom.CustomException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketMessage;
 import org.springframework.web.socket.WebSocketSession;
@@ -43,9 +44,16 @@ public class NodeStatusWebSocketHandler extends TextWebSocketHandler {
         log.info("receive the message: {}", payload);
     }
 
+
+    @Override
+    public void afterConnectionClosed(WebSocketSession session, CloseStatus status) throws Exception {
+        session.close();
+        log.info("session closed, {}", session);
+    }
+
     public void sendNodeStatusUpdate(String nodeInstanceId, String nodeId, String status) {
-        log.info("send the node status update to the node: {}, status: {}", nodeInstanceId, status);
         WebSocketMessage<String> nodeStatusUpdateMessage = new TextMessage(String.format("{\"nodeInstanceId\":\"%s\",\"nodeId\":\"%s\",\"status\":\"%s\"}", nodeInstanceId, nodeId, status));
+        log.info("send the node status update to the node: {}, status: {}, message: {}", nodeInstanceId, status, nodeStatusUpdateMessage);
         sessions.stream().filter(WebSocketSession::isOpen).forEach(session -> {
             try {
                 session.sendMessage(nodeStatusUpdateMessage);

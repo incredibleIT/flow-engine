@@ -2,6 +2,7 @@ package com.lowcode.workflow.runner.graph.controller;
 
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.lowcode.workflow.runner.graph.data.struct.template.Node;
 import com.lowcode.workflow.runner.graph.data.struct.template.NodeType;
 import com.lowcode.workflow.runner.graph.result.PageResult;
 import com.lowcode.workflow.runner.graph.result.Result;
@@ -19,6 +20,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/nodeType")
+@CrossOrigin
 public class NodeTypeController {
 
     @Autowired
@@ -30,6 +32,10 @@ public class NodeTypeController {
      */
     @GetMapping("/list")
     public Result<List<NodeType>> list() {
+
+        List<NodeType> l = nodeTypeService.list();
+        System.out.println(l);
+
         return Result.success(nodeTypeService.list());
     }
 

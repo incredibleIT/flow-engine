@@ -4,7 +4,7 @@ mybatis-plus:
     default-enum-type-handler: com.baomidou.mybatisplus.core.handlers.MybatisEnumTypeHandler
     # 开启下划线转驼峰命名
     map-underscore-to-camel-case: true
-    # 开启SQL日志打印
+  type-handlers-package: com.lowcode.workflow.runner.graph.handler
 #    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
 
 spring:

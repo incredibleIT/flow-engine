@@ -1,13 +1,19 @@
 package com.lowcode.workflow.runner.graph.controller;
 
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.lowcode.workflow.runner.graph.data.struct.template.Edge;
 import com.lowcode.workflow.runner.graph.data.struct.template.Flow;
+import com.lowcode.workflow.runner.graph.data.struct.template.Node;
+import com.lowcode.workflow.runner.graph.data.struct.template.NodeType;
 import com.lowcode.workflow.runner.graph.exception.custom.CustomException;
 import com.lowcode.workflow.runner.graph.result.PageResult;
 import com.lowcode.workflow.runner.graph.result.Result;
+import com.lowcode.workflow.runner.graph.service.EdgeService;
 import com.lowcode.workflow.runner.graph.service.FlowService;
 import com.lowcode.workflow.runner.graph.service.NodeService;
+import com.lowcode.workflow.runner.graph.service.NodeTypeService;
 import com.lowcode.workflow.runner.graph.validation.CreatGroup;
 import com.lowcode.workflow.runner.graph.validation.UpdateGroup;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,15 +24,21 @@ import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 import java.util.List;
+
 // TODO 用户ID
 @RestController
 @RequestMapping("/api/flow")
+@CrossOrigin
 public class FlowController {
 
     @Autowired
     private FlowService flowService;
     @Autowired
     private NodeService nodeService;
+    @Autowired
+    private EdgeService edgeService;
+    @Autowired
+    private NodeTypeService nodeTypeService;
 
 
     /**
@@ -35,7 +47,16 @@ public class FlowController {
      */
     @GetMapping("/list")
     public Result<List<Flow>> list() {
-        return Result.success(flowService.list());
+        List<Flow> flows = flowService.list().stream().peek(flow -> {
+            LambdaQueryWrapper<Node> nodeLambdaQueryWrapper = new LambdaQueryWrapper<>();
+            nodeLambdaQueryWrapper.eq(Node::getFlowId, flow.getId());
+            flow.setNodes(nodeService.list(nodeLambdaQueryWrapper));
+            LambdaQueryWrapper<Edge> edgeLambdaQueryWrapper = new LambdaQueryWrapper<>();
+            edgeLambdaQueryWrapper.eq(Edge::getFlowId, flow.getId());
+            flow.setEdges(edgeService.list(edgeLambdaQueryWrapper));
+        }).toList();
+        System.out.println(flows);
+        return Result.success(flows);
     }
 
 
@@ -63,6 +84,21 @@ public class FlowController {
         if (flow == null) {
             throw new CustomException("这里是一个业务异常, 原因: 流程不存在");
         }
+        LambdaQueryWrapper<Node> nodeLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        nodeLambdaQueryWrapper.eq(Node::getFlowId, flowId);
+        LambdaQueryWrapper<Edge> edgeLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        edgeLambdaQueryWrapper.eq(Edge::getFlowId, flowId);
+        List<Node> ns = nodeService.list(nodeLambdaQueryWrapper);
+        ns.forEach(n -> {
+            LambdaQueryWrapper<NodeType> nodeTypeLambdaQueryWrapper = new LambdaQueryWrapper<>();
+            nodeTypeLambdaQueryWrapper.eq(NodeType::getTypeKey, n.getType());
+            n.setNodeType(nodeTypeService.getOne(nodeTypeLambdaQueryWrapper));
+        });
+        flow.setNodes(ns);
+        flow.setEdges(edgeService.list(edgeLambdaQueryWrapper));
+
+
+
         return Result.success(flow);
     }
 
@@ -116,6 +152,21 @@ public class FlowController {
     @PostMapping("/run")
     public Result<Void> run(@RequestBody Flow flow) {
         flowService.start(flow);
+        return Result.success();
+    }
+
+    /**
+     * 级联保存
+     */
+    @PostMapping("/save/jilian")
+    public Result<Void> saveJiLian(@RequestBody Flow flow) {
+        List<Node> nodeList = flow.getNodes();
+        List<Edge> edgeList = flow.getEdges();
+
+        // TODO 已有的更新, 没有的新增
+        nodeList.forEach(node -> nodeService.saveOrUpdate(node));
+        edgeList.forEach(edge -> edgeService.saveOrUpdate(edge));
+
         return Result.success();
     }
 }

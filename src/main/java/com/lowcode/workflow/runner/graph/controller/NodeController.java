@@ -36,6 +36,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 @Slf4j
 @RestController
 @RequestMapping("/api/node")
+@CrossOrigin
 public class NodeController {
 
     @Autowired

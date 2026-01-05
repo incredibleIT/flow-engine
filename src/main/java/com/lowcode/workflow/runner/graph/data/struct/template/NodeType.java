@@ -56,7 +56,7 @@ public class NodeType {
      *   "method": { "type": "string", "enum": ["GET", "POST"] }
      * }
      */
-    @TableField(typeHandler = JsonTypeHandler.class)
+    @TableField(value = "config_schema", typeHandler = JsonTypeHandler.class)
     @NotNull(groups = {CreatGroup.class}, message = "节点类型配置模式不能为空")
     private Map<String, Object> configSchema;
 

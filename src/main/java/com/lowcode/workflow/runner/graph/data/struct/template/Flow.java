@@ -88,6 +88,7 @@ public class Flow {
     /**
      * 流程级配置，如超时时间、重试策略、全局变量定义等
      */
+    @TableField(typeHandler = JsonTypeHandler.class)
     private Map<String, Object> config;
 
     /**
