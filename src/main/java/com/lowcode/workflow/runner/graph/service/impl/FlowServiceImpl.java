@@ -1,6 +1,7 @@
 package com.lowcode.workflow.runner.graph.service.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.lowcode.workflow.runner.graph.data.struct.instance.FlowInstance;
 import com.lowcode.workflow.runner.graph.mapper.FlowMapper;
 import com.lowcode.workflow.runner.graph.runner.RunnerInit;
 import com.lowcode.workflow.runner.graph.service.FlowInstanceService;
@@ -16,7 +17,7 @@ public class FlowServiceImpl extends ServiceImpl<FlowMapper, Flow> implements Fl
 
 
     @Override
-    public void start(Flow flow) {
-        runnerInit.start(flow);
+    public FlowInstance start(Flow flow) {
+        return runnerInit.start(flow);
     }
 }

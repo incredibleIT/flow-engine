@@ -3,6 +3,7 @@ package com.lowcode.workflow.runner.graph.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.lowcode.workflow.runner.graph.data.struct.instance.FlowInstance;
 import com.lowcode.workflow.runner.graph.data.struct.template.Edge;
 import com.lowcode.workflow.runner.graph.data.struct.template.Flow;
 import com.lowcode.workflow.runner.graph.data.struct.template.Node;
@@ -150,9 +151,9 @@ public class FlowController {
      * 运行流程
      */
     @PostMapping("/run")
-    public Result<Void> run(@RequestBody Flow flow) {
-        flowService.start(flow);
-        return Result.success();
+    public Result<FlowInstance> run(@RequestBody Flow flow) {
+        FlowInstance flowInstance = flowService.start(flow);
+        return Result.success(flowInstance);
     }
 
     /**

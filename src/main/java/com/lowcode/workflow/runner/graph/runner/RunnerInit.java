@@ -31,7 +31,7 @@ public class RunnerInit {
     @Autowired
     private RunnerDispatcherAsync runnerDispatcherAsync;
 
-    public void start(Flow flow) {
+    public FlowInstance start(Flow flow) {
         log.info("等待运行的流程: {}", flow.toString());
         FlowInstance flowInstance = new FlowInstance(flow);
         // 存入数据库
@@ -39,7 +39,9 @@ public class RunnerInit {
         log.info("——————————————构建一个图数据结构————————————");
         Graph<Node, FlowEdge> graph = FlowGraphBuilder.buildGraph(flowInstance.getNodes(), flowInstance.getEdges());
         log.info("——————————————图数据结构构建完成————————————");
-        runAsync(flowInstance, graph);
+        CompletableFuture.runAsync(() -> runAsync(flowInstance, graph));
+//        runAsync(flowInstance, graph);
+        return flowInstance;
     }
 
     public void resumeStart(FlowInstance flowInstance, Node node) {
